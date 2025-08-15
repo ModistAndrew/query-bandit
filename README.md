@@ -28,14 +28,16 @@ For the Cinematic Audio Source Separation model, Bandit, see [this repository](h
 git clone https://github.com/kwatcharasupat/query-bandit.git
 cd query-bandit
 export CONFIG_ROOT="./config"
-
-python train.py inference_byoq \
-  --ckpt_path="/path/to/checkpoint/see-below.ckpt" \
-  --input_path="/path/to/input/file/fearOfMatlab.wav" \ 
-  --output_path="/path/to/output/file/fearOfMatlabStemEst/guitar.wav" \
-  --query_path="/path/to/query/file/random-guitar.wav" \
+python -m debugpy --listen 5678 --wait-for-client \
+train.py inference_byoq \
+  results/ev-pre-aug.ckpt \
+  input/heart.mp3 \
+  input/heart_piano.mp3 \
+  output/piano.wav \
   --batch_size=12 \
   --use_cuda=true
+
+python train.py inference_test_folder   results/ev-pre-aug.ckpt   /inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data/karaoke_converted/test output/karaoke bass  --batch_size=30   --use_cuda=true --input_name=mixture
 ```
 Batch size of 12 _usually_ fits on a RTX 4090.
 

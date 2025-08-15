@@ -6,6 +6,7 @@ import string
 from types import SimpleNamespace
 from typing import List
 import pandas as pd
+import librosa
 
 import torch
 from tqdm import tqdm
@@ -654,22 +655,12 @@ def query_inference_one(
         ta.save(out_path_stem, out["estimates"][stem]["audio"].squeeze().cpu(), 44100)
 
 
-def inference_byoq(
+def init(
     ckpt_path: str,
-    input_path: str,
-    query_path: str,
-    output_path: str,
     config_path: str = None,
-    stem_name: str = "target",
-    model_fs: int = 44100,
-    query_length_seconds: float = 10.0,
     batch_size: int = None,
     use_cuda: bool = True,
 ):
-    
-    assert query_length_seconds == 10.0, "Only 10s queries are supported at the moment."
-    assert model_fs == 44100, "Only 44.1kHz models are supported at the moment."
-    
     if config_path is None:
         config_path = "./expt/bandit-everything-test.yml"
     
@@ -703,11 +694,31 @@ def inference_byoq(
         system.cuda()
     else:
         system.cpu()
-
+        
+    return system
+        
+def inference_file(
+    system,
+    input_path: str,
+    output_path: str,
+    query_path: str,
+    stem_name: str = "target",
+    model_fs: int = 44100,
+    query_length_seconds: float = 10.0,
+):
+    assert query_length_seconds == 10.0, "Only 10s queries are supported at the moment."
+    assert model_fs == 44100, "Only 44.1kHz models are supported at the moment."
+    
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     mixture, fsm = ta.load(input_path)
+    if mixture.shape[0] == 1:
+        mixture = torch.cat([mixture, mixture], dim=0)
+        print("Converting mono mixture to stereo")
     query, fsq = ta.load(query_path)
+    if query.shape[0] == 1:
+        query = torch.cat([query, query], dim=0)
+        print("Converting mono query to stereo")
 
     if fsm != model_fs:
         mixture = ta.functional.resample(mixture, orig_freq=fsm, new_freq=model_fs)
@@ -716,12 +727,14 @@ def inference_byoq(
         query = ta.functional.resample(query, orig_freq=fsq, new_freq=model_fs)
         
     if query.shape[1] > int(query_length_seconds * model_fs):
-        print(f"Query is longer than {query_length_seconds} seconds. Truncating.")
-        query = query[:, :int(query_length_seconds * model_fs)]
+        print(f"Query is longer than {query_length_seconds} seconds. Extracting most active segment.")
+        query = extract_most_active_segment(query, sr=model_fs, chunk_length=query_length_seconds)
     elif query.shape[1] < int(query_length_seconds * model_fs):
         print(f"Query is shorter than {query_length_seconds} seconds. Tiling.")
         query = torch.cat([query] * (int(query_length_seconds * model_fs) // query.shape[1] + 1), dim=1)
         query = query[:, :int(query_length_seconds * model_fs)]
+    
+    assert query.shape[1] == int(query_length_seconds * model_fs)
         
     query = query.unsqueeze(0).to(device=system.device)
     mixture = mixture.unsqueeze(0).to(device=system.device)
@@ -746,6 +759,77 @@ def inference_byoq(
     
     ta.save(output_path, estimate, fsm)
 
+def extract_most_active_segment(
+    audio: torch.Tensor, # (c, l)
+    sr: int = 44100,
+    chunk_length: int = 10,  # seconds
+    hop_size: int = 512
+) -> torch.Tensor:
+    audio_mono = audio.mean(dim=0).numpy()
+    chunk_size = int(chunk_length * sr)
+
+    onset_strength = librosa.onset.onset_strength(
+        y=audio_mono, sr=sr, hop_length=hop_size
+    )
+
+    n_frames_per_chunk = chunk_size // hop_size
+
+    onset_strength_slide = np.lib.stride_tricks.sliding_window_view(
+        onset_strength, n_frames_per_chunk, axis=0
+    )
+
+    onset_strength = np.mean(onset_strength_slide, axis=1)
+
+    max_onset_frame = np.argmax(onset_strength)
+
+    max_onset_samples = librosa.frames_to_samples(max_onset_frame, hop_length=hop_size)
+
+    print("max onset at time", max_onset_samples / sr)
+    segment = audio[:, max_onset_samples : max_onset_samples + chunk_size]
+
+    return segment
+
+def inference_byoq(
+    ckpt_path: str,
+    input_path: str,
+    query_path: str,
+    output_path: str,
+    config_path: str = None,
+    stem_name: str = "target",
+    model_fs: int = 44100,
+    query_length_seconds: float = 10.0,
+    batch_size: int = None,
+    use_cuda: bool = True,
+):
+    system = init(ckpt_path, config_path, batch_size, use_cuda)
+    inference_file(system, input_path, output_path, query_path, stem_name, model_fs, query_length_seconds)
+
+def inference_test_folder(
+    ckpt_path: str,
+    input_dir: str,
+    output_dir: str,
+    query_name: str,
+    input_name: str = "mixture",
+    config_path: str = None,
+    stem_name: str = "target",
+    model_fs: int = 44100,
+    query_length_seconds: float = 10.0,
+    batch_size: int = None,
+    use_cuda: bool = True,
+):
+    system = init(ckpt_path, config_path, batch_size, use_cuda)
+    subdirs = [
+        dirpath for dirpath, _, files in os.walk(input_dir)
+        if f"{input_name}.wav" in files and f"{query_name}.wav" in files
+    ]
+    for i, subdir in enumerate(subdirs):
+        print(f"Processing {i+1}/{len(subdirs)}")
+        rel_path = os.path.relpath(subdir, input_dir)
+        input_path = os.path.join(input_dir, rel_path, f"{input_name}.wav")
+        query_path = os.path.join(input_dir, rel_path, f"{query_name}.wav")
+        output_path = os.path.join(output_dir, rel_path, f"{query_name}.wav")
+        print(input_path, query_path, output_path)
+        inference_file(system, input_path, output_path, query_path, stem_name, model_fs, query_length_seconds)
 
 if __name__ == "__main__":
     import fire
