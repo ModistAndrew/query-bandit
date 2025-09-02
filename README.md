@@ -27,17 +27,37 @@ For the Cinematic Audio Source Separation model, Bandit, see [this repository](h
 ```bash
 git clone https://github.com/kwatcharasupat/query-bandit.git
 cd query-bandit
-export CONFIG_ROOT="./config"
+export CONFIG_ROOT=./config
 python -m debugpy --listen 5678 --wait-for-client \
 train.py inference_byoq \
   results/ev-pre-aug.ckpt \
-  input/heart.mp3 \
-  input/heart_piano.mp3 \
-  output/piano.wav \
+  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
+  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
+  output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
+  --batch_size=12 \
+  --use_cuda=true
+
+python \
+train.py inference_byoq \
+  logs/vdb-pre-aug/e2e/HBRPOI/lightning_logs/version_0/checkpoints/last.ckpt \
+  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
+  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_piano.wav \
+  output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_piano_vdb-pre-aug.wav \
   --batch_size=12 \
   --use_cuda=true
 
 python train.py inference_test_folder   results/ev-pre-aug.ckpt   /inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data/karaoke_converted/test output/karaoke bass  --batch_size=30   --use_cuda=true --input_name=mixture
+
+export CONFIG_ROOT=./config
+export DATA_ROOT=/inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data
+export DATA_ROOT=/dev/shm
+export DATA_ROOT=/inspire/ssd/project/multilingualspeechrecognition/public
+export LOG_ROOT=./logs
+export CUDA_VISIBLE_DEVICES=0
+python \
+train.py train \
+  expt/setup-c/bandit-everything-query-pre-d-aug-bal.yml \
+  --ckpt_path=logs/ev-pre-aug-bal/e2e/HBRPOI/lightning_logs/version_1/checkpoints/last.ckpt
 ```
 Batch size of 12 _usually_ fits on a RTX 4090.
 
