@@ -30,7 +30,7 @@ cd query-bandit
 export CONFIG_ROOT=./config
 python -m debugpy --listen 5678 --wait-for-client \
 train.py inference_byoq \
-  results/ev-pre-aug.ckpt \
+  checkpoints/ev-pre-aug.ckpt \
   input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
   input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
   output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
@@ -52,7 +52,7 @@ export CONFIG_ROOT=./config
 export DATA_ROOT=/inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data
 export DATA_ROOT=/dev/shm
 export DATA_ROOT=/inspire/ssd/project/multilingualspeechrecognition/public
-export LOG_ROOT=./logs
+export LOG_ROOT=./logs/ev-pre
 export CUDA_VISIBLE_DEVICES=0
 python \
 train.py train \
