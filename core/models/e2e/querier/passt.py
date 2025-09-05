@@ -2,11 +2,12 @@ import torch
 import torchaudio as ta
 from hear21passt.base import get_basic_model
 from torch import nn
+from muq import MuQMuLan
 
 class Passt(nn.Module):
 
-    PASST_EMB_DIM: int = 768
-    PASST_FS: int = 32000
+    PASST_EMB_DIM: int = 512
+    PASST_FS: int = 24000
 
     def __init__(
         self,
@@ -15,7 +16,7 @@ class Passt(nn.Module):
     ):
         super().__init__()
 
-        self.passt = get_basic_model(mode="embed_only", arch="openmic").eval()
+        self.passt = MuQMuLan.from_pretrained("OpenMuQ/MuQ-MuLan-large").eval()
         self.resample = ta.transforms.Resample(
             orig_freq=original_fs, new_freq=passt_fs
         ).eval()
@@ -38,9 +39,7 @@ class Passt(nn.Module):
             x = torch.mean(x, dim=1)
             x = self.resample(x)
 
-            specs = self.passt.mel(x)[..., :998]
-            specs = specs[:, None, ...]
-            _, z = self.passt.net(specs)
+            z = self.passt(x)
 
         return z
 
