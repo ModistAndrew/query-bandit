@@ -3,11 +3,12 @@ import torchaudio as ta
 from hear21passt.base import get_basic_model
 from torch import nn
 from muq import MuQMuLan
+import laion_clap
 
 class Passt(nn.Module):
 
     PASST_EMB_DIM: int = 512
-    PASST_FS: int = 24000
+    PASST_FS: int = 48000
 
     def __init__(
         self,
@@ -16,7 +17,8 @@ class Passt(nn.Module):
     ):
         super().__init__()
 
-        self.passt = MuQMuLan.from_pretrained("OpenMuQ/MuQ-MuLan-large").eval()
+        self.passt = laion_clap.CLAP_Module(enable_fusion=False)
+        self.passt.load_ckpt()
         self.resample = ta.transforms.Resample(
             orig_freq=original_fs, new_freq=passt_fs
         ).eval()
@@ -39,7 +41,7 @@ class Passt(nn.Module):
             x = torch.mean(x, dim=1)
             x = self.resample(x)
 
-            z = self.passt(x)
+            z = self.passt.get_audio_embedding_from_data(x = x, use_tensor=True)
 
         return z
 
