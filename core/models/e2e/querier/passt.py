@@ -17,8 +17,8 @@ class Passt(nn.Module):
     ):
         super().__init__()
 
-        self.passt = laion_clap.CLAP_Module(enable_fusion=False)
-        self.passt.load_ckpt()
+        self.passt = laion_clap.CLAP_Module(enable_fusion=False, amodel='HTSAT-base')
+        self.passt.load_ckpt('checkpoints/querier/music_speech_epoch_15_esc_89.25.pt')
         self.resample = ta.transforms.Resample(
             orig_freq=original_fs, new_freq=passt_fs
         ).eval()
