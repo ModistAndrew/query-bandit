@@ -27,5 +27,5 @@ kwargs:
   pad_mode: "reflect"
   onesided: true
   fs: 44100
-  pretrain_encoder: /inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/jinxuanzhu/query-bandit/checkpoints/bandit-vdbo.ckpt
+  pretrain_encoder: /inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/jinxuanzhu/query-bandit/checkpoints/bandit-vdbo-roformer.ckpt
   freeze_encoder: true

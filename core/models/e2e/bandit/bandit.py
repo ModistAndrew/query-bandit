@@ -548,6 +548,12 @@ class PasstFiLMConditionedBandit(BaseConditionedBandit):
             
             if "tf_seqband" in k:
                 k = k.replace("tf_seqband", "tf_model.seqband")
+                
+            if "tf_layers" in k:
+                k = k.replace("tf_layers", "tf_model.layers")
+            
+            if "tf_final_norm" in k:
+                k = k.replace("tf_final_norm", "tf_model.final_norm") # why auto-rename?
             
             state_dict[k] = v
             
