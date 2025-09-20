@@ -2,7 +2,6 @@ import torch
 import torchaudio as ta
 from hear21passt.base import get_basic_model
 from torch import nn
-from muq import MuQMuLan
 import laion_clap
 
 class Passt(nn.Module):
@@ -38,10 +37,14 @@ class Passt(nn.Module):
             torch.Tensor: Embedding output.
         """
         with torch.no_grad():
-            x = torch.mean(x, dim=1)
-            x = self.resample(x)
-
-            z = self.passt.get_audio_embedding_from_data(x = x, use_tensor=True)
+            if hasattr(x.query, "audio"):
+                x = x.query.audio
+                x = torch.mean(x, dim=1)
+                x = self.resample(x)
+                z = self.passt.get_audio_embedding_from_data(x, use_tensor=True)
+            if hasattr(x.query, "text"):
+                x = x.query.text
+                z = self.passt.get_text_embedding(x, use_tensor=True)
 
         return z
 

@@ -758,6 +758,49 @@ def inference_file(
         estimate = ta.functional.resample(estimate, orig_freq=model_fs, new_freq=fsm)
     
     ta.save(output_path, estimate, fsm)
+    
+def inference_file_text(
+    system,
+    input_path: str,
+    output_path: str,
+    query_text: str,
+    stem_name: str = "target",
+    model_fs: int = 44100,
+):
+    assert model_fs == 44100, "Only 44.1kHz models are supported at the moment."
+    
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    mixture, fsm = ta.load(input_path)
+    if mixture.shape[0] == 1:
+        mixture = torch.cat([mixture, mixture], dim=0)
+        print("Converting mono mixture to stereo")
+
+    if fsm != model_fs:
+        mixture = ta.functional.resample(mixture, orig_freq=fsm, new_freq=model_fs)
+        
+    query = [query_text]
+    mixture = mixture.unsqueeze(0).to(device=system.device)
+
+
+    batch = {
+        "mixture": {"audio": mixture},
+        "query": {
+            "text": query
+        },
+        "metadata": {"stem": [stem_name]},
+        "estimates": {},
+    }
+
+    out = system.chunked_inference(batch)
+    
+    estimate = out["estimates"][stem_name]["audio"].squeeze().cpu()
+    
+    if fsm != model_fs:
+        print("Resampling estimate back to the mixture's original sampling rate.")
+        estimate = ta.functional.resample(estimate, orig_freq=model_fs, new_freq=fsm)
+    
+    ta.save(output_path, estimate, fsm)
 
 def extract_most_active_segment(
     audio: torch.Tensor, # (c, l)
@@ -803,6 +846,21 @@ def inference_byoq(
 ):
     system = init(ckpt_path, config_path, batch_size, use_cuda)
     inference_file(system, input_path, output_path, query_path, stem_name, model_fs, query_length_seconds)
+
+def inference_byoq_text(
+    ckpt_path: str,
+    input_path: str,
+    query_text: str,
+    output_path: str,
+    config_path: str = None,
+    stem_name: str = "target",
+    model_fs: int = 44100,
+    batch_size: int = None,
+    use_cuda: bool = True,
+):
+    system = init(ckpt_path, config_path, batch_size, use_cuda)
+    inference_file_text(system, input_path, output_path, query_text, stem_name, model_fs)
+
 
 def inference_test_folder(
     ckpt_path: str,

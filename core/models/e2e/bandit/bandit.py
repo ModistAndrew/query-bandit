@@ -579,7 +579,7 @@ class PasstFiLMConditionedBandit(BaseConditionedBandit):
 
     def adapt_query(self, q, batch):
         
-        w = self.query_encoder(batch.query.audio)
+        w = self.query_encoder(batch)
         q = torch.permute(q, (0, 3, 1, 2)) # (batch, n_band, n_time, emb_dim) -> (batch, emb_dim, n_band, n_time)
         q = self.film(q, w)
         q = torch.permute(q, (0, 2, 3, 1)) # -> (batch, n_band, n_time, emb_dim)
