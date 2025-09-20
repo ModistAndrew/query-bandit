@@ -8,7 +8,7 @@
 - (TODO) Train on more datasets.
 
 ## Model weights
-You need to download the model weights from our huggingface space and put them in `checkpoints/`. `bandit-vdbo-roformer.ckpt` is needed for training. `ev-pre.ckpt` and `ev-pre-aug.ckpt` can be choosen for inference.
+You need to download the model weights from [huggingface space](https://huggingface.co/spaces/chenxie95/query-bandit) and put them in `checkpoints/`. `bandit-vdbo-roformer.ckpt` is needed for training. `ev-pre.ckpt` and `ev-pre-aug.ckpt` can be choosen for inference.
 
 What's more, you need to download the query embedding model CLAP from [here](https://huggingface.co/lukewys/laion_clap/blob/main/music_speech_epoch_15_esc_89.25.pt) and put it in `checkpoints/querier/`.
 
