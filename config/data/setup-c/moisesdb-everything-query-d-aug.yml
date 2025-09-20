@@ -1,6 +1,6 @@
 data_root: ${oc.env:DATA_ROOT}/moisesdb
 cls: MoisesDataModule
-batch_size: 4
+batch_size: 3
 effective_batch_size: null
 num_workers: 8
 train_kwargs:

@@ -1,3 +1,56 @@
+# Language-Audio Banquet
+- Change the query embedding model from PaSST to CLAP, which supports language queries.
+
+- Change RNN to Transformer.
+
+- Some utility functions for inference.
+
+- (TODO) Train on more datasets.
+
+## Model weights
+You need to download the model weights from our huggingface space and put them in `checkpoints/`. `bandit-vdbo-roformer.ckpt` is needed for training. `ev-pre.ckpt` and `ev-pre-aug.ckpt` can be choosen for inference.
+
+## Inference examples
+```bash
+export CONFIG_ROOT=./config
+python \
+# -m debugpy --listen 5678 --wait-for-client \
+train.py inference_byoq \
+  checkpoints/ev-pre-aug.ckpt \
+  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
+  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
+  output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
+  --batch_size=12 \
+  --use_cuda=true
+
+python \
+train.py inference_test_folder \
+  checkpoints/ev-pre-aug.ckpt \
+  /inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data/karaoke_converted/test \
+  output/karaoke \ 
+  bass \
+  --batch_size=30 \
+  --use_cuda=true \
+  --input_name=mixture
+```
+
+## Training examples
+```bash
+export CONFIG_ROOT=./config
+# export DATA_ROOT=/inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data
+# export DATA_ROOT=/dev/shm
+export DATA_ROOT=/inspire/ssd/project/multilingualspeechrecognition/public
+export LOG_ROOT=./logs/ev-pre-aug-bal
+export CUDA_VISIBLE_DEVICES=0
+python \
+train.py train \
+  expt/setup-c/bandit-everything-query-pre-d-aug-bal.yml \
+  --ckpt_path=logs/ev-pre-aug-bal/e2e/HBRPOI/lightning_logs/version_1/checkpoints/last.ckpt
+# You may modify the batch size in yaml files in config/data/. A batch size of 3 fits on a NVIDIA 4090 (48GB).
+```
+
+<div style="height: 4px; background: linear-gradient(90deg, #ff6b6b, #4ecdc4); margin: 40px 0; border-radius: 2px;"></div>
+
 > ### Please consider giving back to the community if you have benefited from this work.
 >
 > If you've **benefited commercially from this work**, which we've poured significant effort into and released under permissive licenses, we hope you've found it valuable! While these licenses give you lots of freedom, we believe in nurturing a vibrant ecosystem where innovation can continue to flourish.
@@ -27,37 +80,15 @@ For the Cinematic Audio Source Separation model, Bandit, see [this repository](h
 ```bash
 git clone https://github.com/kwatcharasupat/query-bandit.git
 cd query-bandit
-export CONFIG_ROOT=./config
-python -m debugpy --listen 5678 --wait-for-client \
-train.py inference_byoq \
-  checkpoints/ev-pre-aug.ckpt \
-  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
-  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
-  output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
+export CONFIG_ROOT="./config"
+
+python train.py inference_byoq \
+  --ckpt_path="/path/to/checkpoint/see-below.ckpt" \
+  --input_path="/path/to/input/file/fearOfMatlab.wav" \ 
+  --output_path="/path/to/output/file/fearOfMatlabStemEst/guitar.wav" \
+  --query_path="/path/to/query/file/random-guitar.wav" \
   --batch_size=12 \
   --use_cuda=true
-
-python \
-train.py inference_byoq \
-  logs/vdb-pre-aug/e2e/HBRPOI/lightning_logs/version_0/checkpoints/last.ckpt \
-  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
-  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_piano.wav \
-  output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_piano_vdb-pre-aug.wav \
-  --batch_size=12 \
-  --use_cuda=true
-
-python train.py inference_test_folder   results/ev-pre-aug.ckpt   /inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data/karaoke_converted/test output/karaoke bass  --batch_size=30   --use_cuda=true --input_name=mixture
-
-export CONFIG_ROOT=./config
-export DATA_ROOT=/inspire/hdd/project/multilingualspeechrecognition/chenxie-25019/data
-export DATA_ROOT=/dev/shm
-export DATA_ROOT=/inspire/ssd/project/multilingualspeechrecognition/public
-export LOG_ROOT=./logs/ev-pre
-export CUDA_VISIBLE_DEVICES=0
-python \
-train.py train \
-  expt/setup-c/bandit-everything-query-pre-d-aug-bal.yml \
-  --ckpt_path=logs/ev-pre-aug-bal/e2e/HBRPOI/lightning_logs/version_1/checkpoints/last.ckpt
 ```
 Batch size of 12 _usually_ fits on a RTX 4090.
 
