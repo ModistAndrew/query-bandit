@@ -10,6 +10,8 @@
 ## Model weights
 You need to download the model weights from our huggingface space and put them in `checkpoints/`. `bandit-vdbo-roformer.ckpt` is needed for training. `ev-pre.ckpt` and `ev-pre-aug.ckpt` can be choosen for inference.
 
+What's more, you need to download the query embedding model CLAP from [here](https://huggingface.co/lukewys/laion_clap/blob/main/music_speech_epoch_15_esc_89.25.pt) and put it in `checkpoints/querier/`.
+
 ## Inference examples
 ```bash
 export CONFIG_ROOT=./config
@@ -20,6 +22,15 @@ train.py inference_byoq \
   input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
   input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
   output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_bass.wav \
+  --batch_size=12 \
+  --use_cuda=true
+
+python \
+train.py inference_byoq_text \
+  checkpoints/ev-pre-aug.ckpt \
+  input/491c1ff5-1e7b-4046-8029-a82d4a8aefb4.wav \
+  piano \
+  output/491c1ff5-1e7b-4046-8029-a82d4a8aefb4_piano.wav \
   --batch_size=12 \
   --use_cuda=true
 
@@ -49,7 +60,7 @@ train.py train \
 # You may modify the batch size in yaml files in config/data/. A batch size of 3 fits on a NVIDIA 4090 (48GB).
 ```
 
-<div style="height: 4px; background: linear-gradient(90deg, #ff6b6b, #4ecdc4); margin: 40px 0; border-radius: 2px;"></div>
+---
 
 > ### Please consider giving back to the community if you have benefited from this work.
 >
