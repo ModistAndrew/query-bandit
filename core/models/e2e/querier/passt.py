@@ -42,7 +42,7 @@ class Passt(nn.Module):
                 x = torch.mean(x, dim=1)
                 x = self.resample(x)
                 z = self.passt.get_audio_embedding_from_data(x, use_tensor=True)
-            if hasattr(x.query, "text"):
+            elif hasattr(x.query, "text"):
                 x = x.query.text
                 z = self.passt.get_text_embedding(x, use_tensor=True)
 
