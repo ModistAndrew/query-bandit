@@ -1,4 +1,7 @@
 # Language-Audio Banquet
+<a href='https://github.com/ModistAndrew/query-bandit'><img alt="Static Badge" src="https://img.shields.io/badge/github_repo-lightgrey?logo=github"></a>
+<a href='https://huggingface.co/spaces/chenxie95/Language-Audio-Banquet'><img alt="Static Badge" src="https://img.shields.io/badge/huggingface_space-yellow?logo=huggingface"></a>
+
 - Change the query embedding model from PaSST to CLAP, which supports language queries.
 
 - Change RNN to Transformer.
@@ -8,7 +11,7 @@
 - (TODO) Train on more datasets.
 
 ## Model weights
-You need to download the model weights from [huggingface space](https://huggingface.co/spaces/chenxie95/query-bandit) and put them in `checkpoints/`. `bandit-vdbo-roformer.ckpt` is needed for training. `ev-pre.ckpt` and `ev-pre-aug.ckpt` can be choosen for inference.
+You need to download the model weights from [huggingface model](https://huggingface.co/chenxie95/Language-Audio-Banquet-ckpt) and put them in `checkpoints/`. `bandit-vdbo-roformer.ckpt` is needed for training. `ev-pre.ckpt` and `ev-pre-aug.ckpt` can be choosen for inference.
 
 What's more, you need to download the query embedding model CLAP from [here](https://huggingface.co/lukewys/laion_clap/blob/main/music_speech_epoch_15_esc_89.25.pt) and put it in `checkpoints/querier/`.
 
