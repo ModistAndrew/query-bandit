@@ -8,7 +8,7 @@
 
 - Some utility functions for inference.
 
-- (TODO) Train on more datasets.
+- (TODO) Train on more datasets; language-audio joint training; fine-tuning for CLAP.
 
 ## Model weights
 You need to download the model weights from [huggingface model](https://huggingface.co/chenxie95/Language-Audio-Banquet-ckpt) and put them in `checkpoints/`. `bandit-vdbo-roformer.ckpt` is needed for training. `ev-pre.ckpt` and `ev-pre-aug.ckpt` can be choosen for inference.
